@@ -122,10 +122,57 @@ const getPhotoById = async (req, res) => {
   }
 };
 
+// Update a photo
+const updatePhoto = async (req, res) => {
+  const { id } = req.params;
+  const { title } = req.body;
+
+  // Check if id is a valid ObjectId
+  if (!ObjectId.isValid(id) || id.length !== 24) {
+    res.status(400).json({
+      errors: ["ID inválido."],
+    });
+    return;
+  }
+
+  const reqUser = req.user;
+  const photo = await Photo.findById(id);
+
+  // Check if photo exists
+  if (!photo) {
+    res.status(404).json({
+      errors: ["Foto não encontrada."],
+    });
+    return;
+  }
+
+  // Check if photo belongs to user
+  if (!photo.userId === reqUser._id) {
+    res.status(422).json({
+      errors: [
+        "Este usuário não tem permissão para editar a foto selecionada.",
+      ],
+    });
+    return;
+  }
+
+  if (title) {
+    photo.title = title;
+  }
+
+  await photo.save();
+
+  res.status(200).json({
+    photo,
+    message: "Foto atualizada.",
+  });
+};
+
 module.exports = {
   insertPhoto,
   deletePhoto,
   getAllPhotos,
   getUserPhotos,
   getPhotoById,
+  updatePhoto,
 };
