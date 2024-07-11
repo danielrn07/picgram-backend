@@ -1,7 +1,7 @@
 const Photo = require("../models/Photo");
 const User = require("../models/User");
-
 const mongoose = require("mongoose");
+const { ObjectId } = mongoose.Types;
 
 // Insert a photo, with an user related to it
 const insertPhoto = async (req, res) => {
@@ -91,9 +91,41 @@ const getUserPhotos = async (req, res) => {
   res.status(200).json(photos);
 };
 
+// Get photo by id
+const getPhotoById = async (req, res) => {
+  const { id } = req.params;
+
+  // Check if id is a valid ObjectId
+  if (!ObjectId.isValid(id) || id.length !== 24) {
+    res.status(400).json({
+      errors: ["ID inválido."],
+    });
+    return;
+  }
+
+  try {
+    const photo = await Photo.findById(id);
+
+    // Check if photo exists
+    if (!photo) {
+      res.status(404).json({
+        errors: ["Foto não encontrada."],
+      });
+      return;
+    }
+
+    res.status(200).json(photo);
+  } catch (error) {
+    res.status(500).json({
+      errors: ["Ocorreu um erro. Tente novamente mais tarde."],
+    });
+  }
+};
+
 module.exports = {
   insertPhoto,
   deletePhoto,
   getAllPhotos,
   getUserPhotos,
+  getPhotoById,
 };
